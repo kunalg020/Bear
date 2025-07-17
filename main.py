@@ -1,16 +1,15 @@
-
 import pandas as pd
 import pandas_ta as ta
 import requests
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # === CONFIGURATION ===
 Dhan_API_KEY = "1001926626"
 Dhan_ACCESS_TOKEN = "9d6dd31d-da48-41a1-81bb-4db68e6fdb63"
 TELEGRAM_BOT_TOKEN = "6560974649:AAFWFSRru0RCqVXzrgrPvTLcsOe-XbR1n_g"
 TELEGRAM_CHAT_ID = "6002421352"
-NIFTY_50_SYMBOLS = ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK"]  # Add more as needed
+NIFTY_50_SYMBOLS = ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK"]
 
 headers = {
     "access-token": Dhan_ACCESS_TOKEN,
@@ -91,9 +90,17 @@ def run_screener():
     else:
         send_telegram_message("✅ Screener matched: " + ", ".join(matches))
 
+def is_trading_hours():
+    now_utc = datetime.utcnow()
+    ist_now = now_utc + timedelta(hours=5, minutes=30)
+    start = ist_now.replace(hour=9, minute=15, second=0, microsecond=0)
+    end = ist_now.replace(hour=15, minute=30, second=0, microsecond=0)
+    if ist_now.weekday() >= 5:
+        return False
+    return start <= ist_now <= end
+
 if __name__ == "__main__":
-    now = datetime.now().time()
-    if 9 <= now.hour < 15:
+    if is_trading_hours():
         run_screener()
     else:
         print("⏰ Outside trading hours. Skipping.")
